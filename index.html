@@ -1,437 +1,518 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>粒子环保 · 跟随鼠标变换</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      background: #0a1f0a;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
-      overflow: hidden;
-      touch-action: none;
-    }
-    canvas {
-      display: block;
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
-      background: radial-gradient(circle at 30% 30%, #1a3a1a, #0a1a0a);
-      cursor: crosshair;
-      box-shadow: 0 0 40px rgba(60, 180, 60, 0.2);
-    }
-    .message {
-      position: fixed;
-      bottom: 28px;
-      left: 0;
-      right: 0;
-      text-align: center;
-      color: rgba(180, 230, 180, 0.6);
-      font-size: 1.1rem;
-      letter-spacing: 2px;
-      text-shadow: 0 0 15px #2d7a2d;
-      pointer-events: none;
-      backdrop-filter: blur(2px);
-      padding: 10px 20px;
-      background: rgba(10, 30, 10, 0.3);
-      border-radius: 40px;
-      width: fit-content;
-      margin: 0 auto;
-      border: 1px solid rgba(100, 200, 100, 0.15);
-      font-weight: 400;
-      z-index: 10;
-      font-family: 'Segoe UI', Roboto, sans-serif;
-    }
-    .message i {
-      font-style: normal;
-      display: inline-block;
-      margin: 0 8px;
-    }
-    @media (max-width: 600px) {
-      .message {
-        font-size: 0.9rem;
-        bottom: 18px;
-        padding: 6px 18px;
-        background: rgba(10, 30, 10, 0.5);
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>粒子 · 保护环境</title>
+    <style>
+        /* 全局重置，简约风格 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0b1f1a;  /* 深林底色 */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'PingFang SC', Roboto, system-ui, -apple-system, sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 画布容器 — 粒子背景层 */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            z-index: 0;
+            pointer-events: none;  /* 让交互穿透 */
+        }
+
+        /* 主内容卡片 — 简约精美，毛玻璃效果 */
+        .hero {
+            position: relative;
+            z-index: 10;
+            max-width: 720px;
+            width: 90%;
+            padding: 2.8rem 2.5rem;
+            background: rgba(220, 245, 235, 0.15);
+            backdrop-filter: blur(8px) saturate(1.2);
+            -webkit-backdrop-filter: blur(8px) saturate(1.2);
+            border-radius: 48px;
+            box-shadow: 0 20px 40px rgba(0, 20, 10, 0.5), 0 0 0 1px rgba(180, 230, 200, 0.2);
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(160, 220, 190, 0.25);
+            color: #e3f5ed;
+            text-shadow: 0 2px 6px rgba(0, 20, 10, 0.5);
+        }
+
+        /* 装饰微光 */
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 120%;
+            height: 120%;
+            background: radial-gradient(circle at 30% 40%, rgba(130, 220, 180, 0.08), transparent 60%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* 标题 — 清新自然 */
+        .hero h1 {
+            font-size: 3.4rem;
+            font-weight: 400;
+            letter-spacing: 4px;
+            margin-bottom: 0.4rem;
+            background: linear-gradient(145deg, #d4f5e8, #b0e0c0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 20px rgba(90, 200, 150, 0.3);
+            word-break: break-word;
+        }
+
+        .hero .sub {
+            font-size: 1.1rem;
+            font-weight: 300;
+            letter-spacing: 6px;
+            color: #c3e8d8;
+            margin-top: -0.2rem;
+            margin-bottom: 1.8rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+        }
+
+        /* 分隔线 — 自然元素 */
+        .divider {
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #8dcdb0, transparent);
+            margin: 0.8rem auto 1.8rem auto;
+            border-radius: 4px;
+        }
+
+        /* 描述文字 */
+        .hero p {
+            font-size: 1.15rem;
+            line-height: 1.7;
+            font-weight: 300;
+            max-width: 500px;
+            margin: 0 auto 2rem auto;
+            color: #ddf3ea;
+            background: rgba(0, 30, 20, 0.2);
+            padding: 0.6rem 1.2rem;
+            border-radius: 60px;
+            backdrop-filter: blur(2px);
+            border: 1px solid rgba(140, 210, 180, 0.15);
+        }
+
+        /* 按钮 — 简约精致 */
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.2rem;
+        }
+
+        .btn {
+            padding: 0.8rem 2.2rem;
+            border-radius: 60px;
+            font-size: 1rem;
+            font-weight: 400;
+            letter-spacing: 2px;
+            background: transparent;
+            border: 1px solid rgba(180, 230, 200, 0.5);
+            color: #daf5e8;
+            cursor: pointer;
+            transition: 0.3s;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 4px 12px rgba(0, 20, 10, 0.2);
+            text-decoration: none;
+            display: inline-block;
+            background: rgba(40, 80, 60, 0.2);
+            min-width: 140px;
+        }
+
+        .btn-primary {
+            background: rgba(100, 210, 160, 0.25);
+            border-color: #7acbad;
+            color: #f0fcf6;
+            box-shadow: 0 0 20px rgba(80, 200, 150, 0.2);
+        }
+
+        .btn-primary:hover {
+            background: rgba(120, 220, 180, 0.35);
+            border-color: #9edfc0;
+            box-shadow: 0 0 30px rgba(80, 220, 160, 0.3);
+            transform: scale(1.02);
+        }
+
+        .btn-outline:hover {
+            background: rgba(160, 210, 185, 0.15);
+            border-color: #b5dfc8;
+            transform: scale(1.02);
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+        }
+
+        /* 小叶子装饰 (纯CSS) */
+        .leaf-icon {
+            display: inline-block;
+            margin-right: 10px;
+            font-size: 1.3rem;
+            filter: drop-shadow(0 0 8px rgba(100, 200, 150, 0.3));
+            vertical-align: middle;
+        }
+
+        /* 响应式 */
+        @media (max-width: 500px) {
+            .hero {
+                padding: 2rem 1.2rem;
+                border-radius: 32px;
+            }
+            .hero h1 {
+                font-size: 2.6rem;
+                letter-spacing: 2px;
+            }
+            .hero .sub {
+                font-size: 0.9rem;
+                letter-spacing: 4px;
+            }
+            .hero p {
+                font-size: 1rem;
+                padding: 0.4rem 0.8rem;
+            }
+            .btn {
+                padding: 0.6rem 1.4rem;
+                min-width: 120px;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* 底部水印 — 极简 */
+        .credit {
+            position: fixed;
+            bottom: 24px;
+            right: 28px;
+            z-index: 20;
+            color: rgba(180, 220, 200, 0.25);
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            font-weight: 300;
+            backdrop-filter: blur(4px);
+            padding: 6px 16px;
+            border-radius: 40px;
+            background: rgba(0, 20, 10, 0.15);
+            border: 1px solid rgba(120, 180, 150, 0.08);
+            pointer-events: none;
+        }
+    </style>
 </head>
 <body>
-  <canvas id="canvas"></canvas>
-  <div class="message">🌱 守护绿色 · 粒子随行 🌍</div>
+    <!-- 粒子画布 -->
+    <canvas id="particle-canvas"></canvas>
 
-  <script>
-    (function() {
-      const canvas = document.getElementById('canvas');
-      const ctx = canvas.getContext('2d');
+    <!-- 主界面 -->
+    <main class="hero">
+        <h1>🌱 共生</h1>
+        <div class="sub">保护 · 永续</div>
+        <div class="divider"></div>
+        <p>✨ 每一颗微尘，都是自然的呼吸。<br>守护绿色，即是守护未来。</p>
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="alert('🌍 愿每一缕风都清澈，每一片叶都自由。')">
+                <span class="leaf-icon">🌿</span> 行动
+            </button>
+            <button class="btn btn-outline" onclick="alert('🌳 万物有灵，和谐共生。')">
+                <span class="leaf-icon">🍃</span> 永续
+            </button>
+        </div>
+    </main>
 
-      let width, height;
-      let particles = [];
-      const PARTICLE_COUNT = 220;        // 粒子数量 —— 生机盎然
-      const MAX_DIST = 130;             // 连线距离阈值
-      const MOUSE_INFLUENCE = 0.12;     // 鼠标跟随柔和度
+    <div class="credit">✦ 粒子 · 自然 ✦</div>
 
-      // 鼠标 / 触摸 坐标 (归一化 0~1)
-      let mouseX = 0.5;
-      let mouseY = 0.5;
-      let mouseActive = false;
+    <script>
+        (function() {
+            "use strict";
 
-      // 用于缓动跟随的“真实”目标点 (让鼠标移动更柔和)
-      let targetX = 0.5;
-      let targetY = 0.5;
+            // ----- 画布设置 -----
+            const canvas = document.getElementById('particle-canvas');
+            const ctx = canvas.getContext('2d');
 
-      // ----- 工具：随机范围 -----
-      const rand = (min, max) => Math.random() * (max - min) + min;
+            let width, height;
+            let particles = [];
+            const PARTICLE_COUNT = 120;        // 粒子数量 (恰到好处的密度)
+            const MAX_SPEED = 0.35;            // 柔和飘动
 
-      // ----- 粒子类 -----
-      class Particle {
-        constructor() {
-          this.reset(true); // 初始完全随机
-        }
+            // 颜色调色板 — 自然绿意 + 微光
+            const palette = [
+                { r: 140, g: 220, b: 170 },   // 嫩绿
+                { r: 110, g: 200, b: 160 },   // 草绿
+                { r: 180, g: 235, b: 190 },   // 浅薄荷
+                { r: 90,  g: 190, b: 150 },   // 森林
+                { r: 210, g: 240, b: 200 },   // 淡青
+                { r: 160, g: 210, b: 180 },   // 灰绿
+            ];
 
-        reset(init = false) {
-          // 位置 (0~1 归一化)
-          this.x = rand(0, 1);
-          this.y = rand(0, 1);
-          // 尺寸: 基础半径 1.8~5.2，环保主题以绿色调大小略有层次
-          this.baseRadius = rand(1.8, 5.2);
-          // 颜色: 从嫩绿到深绿，带一点青/黄
-          const hue = rand(95, 155);        // 95~155 绿色范围 (黄绿→青绿)
-          const sat = rand(50, 85);
-          const lig = rand(55, 85);
-          this.color = `hsl(${hue}, ${sat}%, ${lig}%)`;
-          // 独立速度 (用于随机漫游，让粒子有呼吸感)
-          this.vx = rand(-0.0006, 0.0006);
-          this.vy = rand(-0.0006, 0.0006);
-          // 相位偏移 (用于微动)
-          this.phase = rand(0, Math.PI * 2);
-          // 标记是否初始化 (重置时稍微偏移)
-          if (!init) {
-            // 非初始化重置：在当前位置附近扰动，避免完全重叠
-            this.x += rand(-0.05, 0.05);
-            this.y += rand(-0.05, 0.05);
-            // 边界修剪
-            this.x = Math.min(1, Math.max(0, this.x));
-            this.y = Math.min(1, Math.max(0, this.y));
-          }
-        }
+            // 辅助: 随机范围
+            const rand = (min, max) => Math.random() * (max - min) + min;
 
-        // 更新粒子位置：结合随机漫游 + 鼠标吸引
-        update(time) {
-          // 1. 随机漫游 (布朗运动，幅度随环境柔和)
-          this.vx += rand(-0.0004, 0.0004);
-          this.vy += rand(-0.0004, 0.0004);
-          // 限制速度幅度
-          const maxSpeed = 0.002;
-          let sp = Math.hypot(this.vx, this.vy);
-          if (sp > maxSpeed) {
-            this.vx = (this.vx / sp) * maxSpeed;
-            this.vy = (this.vy / sp) * maxSpeed;
-          }
+            // ----- 粒子类 -----
+            class Particle {
+                constructor() {
+                    this.reset(true); // 强制初始随机位置
+                    // 额外随机尺寸 & 透明度 & 颜色偏移
+                    this.size = rand(2.8, 6.0);
+                    this.opacity = rand(0.4, 0.9);
+                    // 从调色板中选一个基色
+                    const col = palette[Math.floor(Math.random() * palette.length)];
+                    this.color = {
+                        r: col.r + Math.floor(rand(-18, 18)),
+                        g: col.g + Math.floor(rand(-18, 18)),
+                        b: col.b + Math.floor(rand(-18, 18)),
+                    };
+                    // 确保颜色在合理范围
+                    this.color.r = Math.min(255, Math.max(80, this.color.r));
+                    this.color.g = Math.min(240, Math.max(100, this.color.g));
+                    this.color.b = Math.min(220, Math.max(90, this.color.b));
 
-          // 2. 鼠标影响：朝鼠标位置偏移 (归一化坐标)
-          const dx = mouseX - this.x;
-          const dy = mouseY - this.y;
-          const dist = Math.hypot(dx, dy);
-          // 距离越近，吸引力越强 (但不会过于聚集)
-          if (dist > 0.001) {
-            const force = Math.min(0.035, MOUSE_INFLUENCE * 0.8 / (dist + 0.05));
-            this.vx += dx * force;
-            this.vy += dy * force;
-          }
+                    // 速度 (极慢飘动)
+                    this.vx = rand(-MAX_SPEED, MAX_SPEED);
+                    this.vy = rand(-MAX_SPEED, MAX_SPEED);
+                    // 轻微旋转变化因子 (用于轨迹)
+                    this.phase = rand(0, Math.PI * 2);
+                    this.drift = rand(0.002, 0.008);
+                }
 
-          // 3. 边界反弹/回推 (让粒子不超出画布)
-          const margin = 0.02;
-          if (this.x < margin) { this.x = margin; this.vx += 0.002; }
-          if (this.x > 1 - margin) { this.x = 1 - margin; this.vx -= 0.002; }
-          if (this.y < margin) { this.y = margin; this.vy += 0.002; }
-          if (this.y > 1 - margin) { this.y = 1 - margin; this.vy -= 0.002; }
+                reset(forceRandom = false) {
+                    if (forceRandom || Math.random() < 0.3) {
+                        // 完全随机
+                        this.x = rand(0, width);
+                        this.y = rand(0, height);
+                    } else {
+                        // 略微偏向中心区域 (让视觉聚焦)
+                        const cx = width * 0.5, cy = height * 0.45;
+                        this.x = cx + rand(-width * 0.4, width * 0.4);
+                        this.y = cy + rand(-height * 0.35, height * 0.35);
+                        // 边界保护
+                        this.x = Math.min(width, Math.max(0, this.x));
+                        this.y = Math.min(height, Math.max(0, this.y));
+                    }
+                    // 随机速度微调
+                    this.vx = rand(-MAX_SPEED, MAX_SPEED);
+                    this.vy = rand(-MAX_SPEED, MAX_SPEED);
+                }
 
-          // 4. 应用速度
-          this.x += this.vx;
-          this.y += this.vy;
+                // 更新位置 & 边界回弹 / 柔和环绕
+                update() {
+                    // 加入正弦微扰，产生更自然的流动感
+                    this.phase += this.drift;
+                    const waveX = Math.sin(this.phase) * 0.08;
+                    const waveY = Math.cos(this.phase * 0.7) * 0.08;
 
-          // 5. 微弱的“呼吸”漂移 (基于时间正弦)
-          const breathe = 0.0002 * Math.sin(time * 0.002 + this.phase);
-          this.x += breathe * 0.5;
-          this.y += breathe * 0.3;
+                    this.x += this.vx + waveX;
+                    this.y += this.vy + waveY;
 
-          // 裁剪到 [0,1]
-          this.x = Math.min(1, Math.max(0, this.x));
-          this.y = Math.min(1, Math.max(0, this.y));
-        }
+                    // 边界处理 — 柔和循环 (像在广袤森林中飘移)
+                    if (this.x < -20) this.x = width + 20;
+                    else if (this.x > width + 20) this.x = -20;
+                    if (this.y < -20) this.y = height + 20;
+                    else if (this.y > height + 20) this.y = -20;
 
-        // 绘制粒子 (光晕 + 核心)
-        draw(ctx, width, height) {
-          const px = this.x * width;
-          const py = this.y * height;
-          const radius = this.baseRadius * (0.8 + 0.4 * Math.sin(Date.now() * 0.003 + this.phase));
+                    // 偶尔轻微改变方向 (增加随机性)
+                    if (Math.random() < 0.006) {
+                        this.vx += rand(-0.08, 0.08);
+                        this.vy += rand(-0.08, 0.08);
+                        // 限速
+                        const maxV = MAX_SPEED * 1.2;
+                        this.vx = Math.min(maxV, Math.max(-maxV, this.vx));
+                        this.vy = Math.min(maxV, Math.max(-maxV, this.vy));
+                    }
+                }
 
-          // 发光外晕 (环保绿光)
-          const gradient = ctx.createRadialGradient(px, py, 0, px, py, radius * 2.6);
-          gradient.addColorStop(0, this.color);
-          gradient.addColorStop(0.4, this.color.replace('hsl', 'hsla').replace(')', ', 0.5)'));
-          gradient.addColorStop(1, 'rgba(40, 100, 40, 0)');
-          ctx.beginPath();
-          ctx.arc(px, py, radius * 2.6, 0, Math.PI * 2);
-          ctx.fillStyle = gradient;
-          ctx.fill();
+                // 绘制粒子 (带光晕)
+                draw(ctx) {
+                    const { r, g, b } = this.color;
+                    const alpha = this.opacity * (0.7 + 0.3 * Math.sin(this.phase * 0.5)); // 呼吸感
 
-          // 核心亮点
-          ctx.beginPath();
-          ctx.arc(px, py, radius * 0.7, 0, Math.PI * 2);
-          ctx.fillStyle = this.color;
-          ctx.shadowColor = 'rgba(120, 255, 120, 0.5)';
-          ctx.shadowBlur = 16;
-          ctx.fill();
-          // 高光小点
-          ctx.shadowBlur = 6;
-          ctx.beginPath();
-          ctx.arc(px - radius * 0.2, py - radius * 0.25, radius * 0.25, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(240, 255, 220, 0.7)';
-          ctx.fill();
-          // 重置阴影
-          ctx.shadowBlur = 0;
-        }
-      }
+                    // 主光晕 (外发光)
+                    const gradient = ctx.createRadialGradient(
+                        this.x, this.y, 0,
+                        this.x, this.y, this.size * 2.8
+                    );
+                    gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${alpha * 0.7})`);
+                    gradient.addColorStop(0.5, `rgba(${r-20}, ${g+10}, ${b-10}, ${alpha * 0.25})`);
+                    gradient.addColorStop(1, `rgba(${r-40}, ${g-20}, ${b-20}, 0)`);
 
-      // ----- 初始化粒子 -----
-      function initParticles() {
-        particles = [];
-        for (let i = 0; i < PARTICLE_COUNT; i++) {
-          particles.push(new Particle());
-        }
-      }
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size * 2.8, 0, Math.PI * 2);
+                    ctx.fillStyle = gradient;
+                    ctx.fill();
 
-      // ----- 绘制连线 (生态网络) -----
-      function drawConnections(ctx, width, height) {
-        const len = particles.length;
-        // 为了性能，随机采样部分配对，但仍保持丰富连线
-        const step = 2; // 每隔一个粒子检查，提高性能
-        for (let i = 0; i < len; i += step) {
-          const p1 = particles[i];
-          const px1 = p1.x * width;
-          const py1 = p1.y * height;
+                    // 核心亮点 (更明亮)
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size * 0.7, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${Math.min(255, r+40)}, ${Math.min(255, g+40)}, ${Math.min(255, b+30)}, ${alpha * 0.8})`;
+                    ctx.fill();
 
-          // 只与附近的粒子连线 (从 i+1 开始)
-          for (let j = i + 1; j < len; j += 2) {
-            const p2 = particles[j];
-            const dx = px1 - p2.x * width;
-            const dy = py1 - p2.y * height;
-            const dist = Math.hypot(dx, dy);
-            if (dist < MAX_DIST) {
-              // 透明度随距离变化
-              const alpha = 1 - (dist / MAX_DIST);
-              const lineWidth = 0.8 + alpha * 1.5;
-              // 颜色：青绿到翠绿，且受鼠标距离影响 (鼠标附近更亮)
-              const green = 140 + 80 * alpha;
-              const blue = 70 + 60 * alpha;
-              // 鼠标距离影响亮度：计算粒子到鼠标的归一化距离
-              const mx = mouseX * width;
-              const my = mouseY * height;
-              const distToMouse = Math.hypot(px1 - mx, py1 - my);
-              const mouseBright = Math.max(0.4, 1 - distToMouse / (width * 0.5));
-              const finalAlpha = alpha * (0.35 + 0.55 * mouseBright);
+                    // 第二层光晕 (小)
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size * 1.5, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha * 0.2})`;
+                    ctx.fill();
 
-              ctx.beginPath();
-              ctx.moveTo(px1, py1);
-              ctx.lineTo(p2.x * width, p2.y * height);
-              ctx.strokeStyle = `rgba(120, ${Math.floor(green)}, ${Math.floor(blue)}, ${finalAlpha * 0.7})`;
-              ctx.lineWidth = lineWidth * 0.8;
-              ctx.shadowColor = 'rgba(100, 200, 100, 0.2)';
-              ctx.shadowBlur = 8;
-              ctx.stroke();
+                    // 微光连接线 (极淡) — 与临近粒子互动，但为了简约，只加一点装饰
+                    // 在draw中不做连线，避免杂乱
+                }
             }
-          }
-        }
-        ctx.shadowBlur = 0;
-      }
 
-      // ----- 重置画布尺寸 -----
-      function resizeCanvas() {
-        width = window.innerWidth;
-        height = window.innerHeight;
-        canvas.width = width;
-        canvas.height = height;
-        // 尺寸变化时重新分布粒子，避免聚集
-        if (particles.length) {
-          particles.forEach(p => {
-            p.x = rand(0, 1);
-            p.y = rand(0, 1);
-          });
-        }
-      }
+            // ----- 初始化粒子 -----
+            function initParticles() {
+                particles = [];
+                for (let i = 0; i < PARTICLE_COUNT; i++) {
+                    particles.push(new Particle());
+                }
+            }
 
-      // ----- 动画循环 -----
-      let animationFrame;
-      function animate(timestamp) {
-        // 更新粒子
-        for (let p of particles) {
-          p.update(timestamp);
-        }
+            // ----- 调整尺寸 (自适应) -----
+            function resizeCanvas() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+                // 粒子重置位置适应新尺寸 (保留部分位置)
+                if (particles.length > 0) {
+                    particles.forEach(p => {
+                        p.x = Math.min(width, Math.max(0, p.x));
+                        p.y = Math.min(height, Math.max(0, p.y));
+                    });
+                } else {
+                    initParticles();
+                }
+            }
 
-        // 清空画布 (半透明拖尾效果)
-        ctx.clearRect(0, 0, width, height);
-        // 绘制朦胧背景光晕 (微弱的环保色)
-        const bgGrad = ctx.createRadialGradient(
-          width * mouseX, height * mouseY, 10,
-          width * mouseX, height * mouseY, width * 0.7
-        );
-        bgGrad.addColorStop(0, 'rgba(40, 100, 40, 0.08)');
-        bgGrad.addColorStop(0.5, 'rgba(20, 70, 20, 0.04)');
-        bgGrad.addColorStop(1, 'rgba(0, 20, 0, 0)');
-        ctx.fillStyle = bgGrad;
-        ctx.fillRect(0, 0, width, height);
+            // ----- 绘制背景 (极简渐变) -----
+            function drawBackground() {
+                // 深邃林间底色，带有微光渐变
+                const gradient = ctx.createLinearGradient(0, 0, width * 0.6, height);
+                gradient.addColorStop(0, '#0a2820');
+                gradient.addColorStop(0.5, '#11352a');
+                gradient.addColorStop(1, '#0b1f1a');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, width, height);
 
-        // 绘制连线 (先画连线再画粒子，使粒子在上层)
-        drawConnections(ctx, width, height);
+                // 添加非常淡的雾状光晕 (提升层次)
+                const glow = ctx.createRadialGradient(
+                    width * 0.4, height * 0.3, 0,
+                    width * 0.4, height * 0.3, width * 0.6
+                );
+                glow.addColorStop(0, 'rgba(80, 180, 140, 0.04)');
+                glow.addColorStop(0.7, 'rgba(40, 130, 100, 0.02)');
+                glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = glow;
+                ctx.fillRect(0, 0, width, height);
+            }
 
-        // 绘制粒子
-        for (let p of particles) {
-          p.draw(ctx, width, height);
-        }
+            // ----- 画连接线 (非常淡，增强粒子之间的“生态网络”感) -----
+            function drawConnections() {
+                // 只连接距离较近的粒子，表现“共生”主题
+                const maxDist = 120;
+                const maxDistSq = maxDist * maxDist;
+                const len = particles.length;
 
-        // 添加一些漂浮的“孢子”小点 (额外装饰)
-        ctx.shadowBlur = 0;
-        for (let i = 0; i < 6; i++) {
-          const t = timestamp * 0.0004 + i * 1.8;
-          const x = (Math.sin(t) * 0.5 + 0.5) * width;
-          const y = (Math.cos(t * 0.7) * 0.5 + 0.5) * height;
-          const r = 1.5 + Math.sin(t * 2) * 0.8;
-          ctx.beginPath();
-          ctx.arc(x, y, r, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(160, 230, 150, ${0.12 + 0.08 * Math.sin(t * 1.3)})`;
-          ctx.fill();
-        }
+                // 为了性能，只对部分粒子进行连接 (随机采样，依然保持视觉效果)
+                const step = 2; 
+                for (let i = 0; i < len; i += step) {
+                    const p1 = particles[i];
+                    for (let j = i + 1; j < len; j += step) {
+                        const p2 = particles[j];
+                        const dx = p1.x - p2.x;
+                        const dy = p1.y - p2.y;
+                        const distSq = dx * dx + dy * dy;
+                        if (distSq < maxDistSq && distSq > 5) {
+                            const dist = Math.sqrt(distSq);
+                            const alpha = 0.15 * (1 - dist / maxDist) * 0.6;
+                            // 颜色从两个粒子取平均
+                            const r = (p1.color.r + p2.color.r) / 2;
+                            const g = (p1.color.g + p2.color.g) / 2;
+                            const b = (p1.color.b + p2.color.b) / 2;
+                            ctx.beginPath();
+                            ctx.moveTo(p1.x, p1.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                            ctx.lineWidth = 0.8;
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
 
-        animationFrame = requestAnimationFrame(animate);
-      }
+            // ----- 动画循环 -----
+            function animate() {
+                // 1. 背景
+                drawBackground();
 
-      // ----- 鼠标 / 触摸 事件 (归一化坐标) -----
-      function handleMove(e) {
-        const rect = canvas.getBoundingClientRect();
-        let clientX, clientY;
-        if (e.touches) {
-          // 触摸事件
-          e.preventDefault();
-          clientX = e.touches[0].clientX;
-          clientY = e.touches[0].clientY;
-        } else {
-          clientX = e.clientX;
-          clientY = e.clientY;
-        }
-        // 计算归一化坐标 (0~1)
-        let nx = (clientX - rect.left) / rect.width;
-        let ny = (clientY - rect.top) / rect.height;
-        // 钳制
-        nx = Math.min(1, Math.max(0, nx));
-        ny = Math.min(1, Math.max(0, ny));
-        mouseX = nx;
-        mouseY = ny;
-        mouseActive = true;
-      }
+                // 2. 更新粒子
+                for (let p of particles) {
+                    p.update();
+                }
 
-      function handleLeave() {
-        // 鼠标离开窗口时，慢慢回到中心，但不是立即跳转
-        mouseActive = false;
-        // 逐渐回到中心 (由动画循环处理)
-      }
+                // 3. 画连接 (生态网)
+                drawConnections();
 
-      // 使用 requestAnimationFrame 做平滑鼠标归位
-      function smoothMouseReturn() {
-        if (!mouseActive) {
-          // 每帧向中心靠近
-          mouseX += (0.5 - mouseX) * 0.02;
-          mouseY += (0.5 - mouseY) * 0.02;
-        }
-      }
+                // 4. 绘制粒子 (叠加)
+                for (let p of particles) {
+                    p.draw(ctx);
+                }
 
-      // 将鼠标归位逻辑注入动画循环 (通过修改animate)
-      const originalAnimate = animate;
-      animate = function(timestamp) {
-        smoothMouseReturn();
-        // 调用原函数逻辑 (但没法直接覆盖，重新定义)
-        // 这里重新实现一遍以保证清晰
-        // 更新粒子
-        for (let p of particles) {
-          p.update(timestamp);
-        }
+                // 额外装饰: 极少量星芒 (漂浮的亮点)
+                if (particles.length > 0) {
+                    for (let i = 0; i < 4; i++) {
+                        const idx = Math.floor(Math.random() * particles.length);
+                        const p = particles[idx];
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, 1.2, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(220, 255, 230, 0.25)`;
+                        ctx.fill();
+                    }
+                }
 
-        ctx.clearRect(0, 0, width, height);
-        // 背景光晕
-        const bgGrad = ctx.createRadialGradient(
-          width * mouseX, height * mouseY, 10,
-          width * mouseX, height * mouseY, width * 0.7
-        );
-        bgGrad.addColorStop(0, 'rgba(40, 100, 40, 0.08)');
-        bgGrad.addColorStop(0.5, 'rgba(20, 70, 20, 0.04)');
-        bgGrad.addColorStop(1, 'rgba(0, 20, 0, 0)');
-        ctx.fillStyle = bgGrad;
-        ctx.fillRect(0, 0, width, height);
+                requestAnimationFrame(animate);
+            }
 
-        drawConnections(ctx, width, height);
+            // ----- 启动一切 -----
+            function init() {
+                resizeCanvas();
+                initParticles();
+                animate();
 
-        for (let p of particles) {
-          p.draw(ctx, width, height);
-        }
+                // 窗口变化自适应
+                window.addEventListener('resize', () => {
+                    resizeCanvas();
+                });
 
-        // 孢子
-        ctx.shadowBlur = 0;
-        for (let i = 0; i < 6; i++) {
-          const t = timestamp * 0.0004 + i * 1.8;
-          const x = (Math.sin(t) * 0.5 + 0.5) * width;
-          const y = (Math.cos(t * 0.7) * 0.5 + 0.5) * height;
-          const r = 1.5 + Math.sin(t * 2) * 0.8;
-          ctx.beginPath();
-          ctx.arc(x, y, r, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(160, 230, 150, ${0.12 + 0.08 * Math.sin(t * 1.3)})`;
-          ctx.fill();
-        }
+                // 对于移动端，不需要额外操作
+            }
 
-        animationFrame = requestAnimationFrame(animate);
-      };
+            // 页面完全加载后执行
+            if (document.readyState === 'complete') {
+                init();
+            } else {
+                window.addEventListener('load', init);
+            }
 
-      // ----- 启动与事件绑定 -----
-      function init() {
-        resizeCanvas();
-        initParticles();
-
-        // 鼠标事件
-        window.addEventListener('mousemove', handleMove);
-        window.addEventListener('mouseleave', handleLeave);
-        // 触摸事件
-        window.addEventListener('touchmove', handleMove, { passive: false });
-        window.addEventListener('touchend', () => { mouseActive = false; });
-        window.addEventListener('touchcancel', () => { mouseActive = false; });
-
-        // 窗口缩放重置
-        window.addEventListener('resize', () => {
-          resizeCanvas();
-        });
-
-        // 启动动画
-        if (animationFrame) cancelAnimationFrame(animationFrame);
-        animate(0);
-      }
-
-      // 页面加载初始化
-      if (document.readyState === 'complete') {
-        init();
-      } else {
-        window.addEventListener('load', init);
-      }
-
-    })();
-  </script>
+        })();
+    </script>
 </body>
 </html>
